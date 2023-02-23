@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_project/constants/colors.dart';
+import 'package:flutter_chat_project/widgets/chat_item.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -14,7 +15,12 @@ class Home extends StatelessWidget {
         padding: const EdgeInsets.only(top: 15),
         child: const Column(
           children: [
-            
+            ChatItem(),
+            ChatItem(),
+            ChatItem(),
+            ChatItem(),
+            ChatItem(),
+            ChatItem(),
           ],
         ),
       ),
@@ -24,17 +30,12 @@ class Home extends StatelessWidget {
   AppBar _appBar() {
     return AppBar(
       backgroundColor: tdBGColor,
-      elevation: 1,
+      elevation: 2,
       title: const Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(
-            Icons.menu,
-            color: tdBlack,
-            size: 30,
-          ),
           Text(
-            "Chats",
+            "Mensagens",
             style: TextStyle(color: tdBlack),
           ),
           Icon(
