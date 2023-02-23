@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:web_socket_channel/io.dart';
 
 import '../constants/colors.dart';
 import '../model/message.dart';
@@ -11,6 +14,25 @@ class Chat extends StatefulWidget {
 }
 
 class _ChatState extends State<Chat> {
+  final channel = IOWebSocketChannel.connect("ws://127.0.0.1:7890/SendMessage");
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    streamListener();
+  }
+
+  streamListener() {
+    channel.stream.listen((msg) {
+      setState(() {
+        Map stringToJson = jsonDecode(msg);
+
+        messages.add(Message(message: stringToJson['message'], idUser: stringToJson['idUser']));
+      });
+    });
+  }
+
   final messages = Message.getListMessage();
   final _messageController = TextEditingController();
   final _focusNodeController = FocusNode();
@@ -29,22 +51,19 @@ class _ChatState extends State<Chat> {
             reverse: true,
             child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
               for (Message messagee in messages)
-                message(messagee.message, false)
+                message(messagee.message, messagee.idUser)
             ]),
           ),
         ),
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: inputMessage()
-        )
+        Align(alignment: Alignment.bottomCenter, child: inputMessage())
       ]),
     );
   }
 
-  Widget message(String msg, bool received) {
+  Widget message(String msg, int id) {
     return Container(
       width: double.infinity,
-      alignment: received ? Alignment.centerLeft : Alignment.centerRight,
+      alignment: id != 0 ? Alignment.centerLeft : Alignment.centerRight,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       child: Container(
         padding: const EdgeInsets.all(10),
@@ -65,7 +84,7 @@ class _ChatState extends State<Chat> {
         focusNode: _focusNodeController,
         controller: _messageController,
         onSubmitted: (String msg) {
-          _sendNewMessage(msg);
+          _sendNewMessage(msg, 0);
         },
         decoration: InputDecoration(
             contentPadding: const EdgeInsets.all(2),
@@ -77,7 +96,8 @@ class _ChatState extends State<Chat> {
                 size: 20,
               ),
             ),
-            suffixIconConstraints: const BoxConstraints(minHeight: 20, minWidth: 20),
+            suffixIconConstraints:
+                const BoxConstraints(minHeight: 20, minWidth: 20),
             border: InputBorder.none,
             hintText: "Escreva sua Mensagem",
             hintStyle: const TextStyle(color: tdGrey)),
@@ -101,10 +121,9 @@ class _ChatState extends State<Chat> {
     );
   }
 
-  void _sendNewMessage(String msg) {
-    setState(() {
-      messages.add(Message(message: msg));
-    });
+  void _sendNewMessage(String msg, int id) {
+    String jsonToString = jsonEncode(Message(message: msg, idUser: id));
+    channel.sink.add(jsonToString);
     _messageController.clear();
     _focusNodeController.requestFocus();
   }
